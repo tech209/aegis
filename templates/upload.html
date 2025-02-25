@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Credit Snapshot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <h1>📤 Upload Credit Snapshot</h1>
+    <p>Submit your financial integrity proof to the blockchain.</p>
+
+    <form id="uploadForm">
+        <label for="phrase1">Passphrase 1:</label>
+        <input type="text" id="phrase1" name="phrase1" required>
+
+        <label for="phrase2">Passphrase 2:</label>
+        <input type="text" id="phrase2" name="phrase2" required>
+
+        <label for="biometric_proof">Biometric Proof:</label>
+        <input type="text" id="biometric_proof" name="biometric_proof" required>
+
+        <label for="credit_score">Credit Score:</label>
+        <input type="number" id="credit_score" name="credit_score" required>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <p id="result"></p>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis - Credit Protection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <h1>🛡️ Aegis Credit Protection</h1>
+    <p>Secure your financial activism without long-term consequences.</p>
+
+    <div>
+        <a href="{{ url_for('routes.upload_page') }}">📤 Upload Credit Snapshot</a>
+        <a href="{{ url_for('routes.verify_page') }}">🔍 Verify Credit Snapshot</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

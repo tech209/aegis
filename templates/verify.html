@@ -1,0 +1,32 @@
+<form id="verifyForm">
+    <label for="user_id">Enter Fingerprint (user_id):</label>
+    <input type="text" id="user_id" name="user_id" required>
+    <button type="submit">Verify</button>
+</form>
+<p id="verifyResult"></p>
+
+<script>
+document.getElementById("verifyForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const user_id = document.getElementById("user_id").value;
+
+    const response = await fetch("/get_credit_report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id })
+    });
+
+    const result = await response.json();
+    if (result.error) {
+        document.getElementById("verifyResult").innerText = `❌ ${result.error}`;
+    } else {
+        document.getElementById("verifyResult").innerHTML = `
+            ✅ Credit Snapshot Found!<br>
+            <strong>User Address:</strong> ${result.user_address} <br>
+            <strong>Credit Score:</strong> ${result.credit_score} <br>
+            <strong>Timestamp:</strong> ${result.timestamp} <br>
+            <strong>Report Hash:</strong> ${result.report_hash}
+        `;
+    }
+});
+</script>
