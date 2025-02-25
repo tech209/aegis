@@ -1,0 +1,44 @@
+node_modules
+.env
+
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337
+
+# 🛑 Ignore Python virtual environment
+venv/
+
+# 🛑 Ignore Node.js dependencies
+node_modules/
+
+# 🛑 Ignore compiled Python files
+__pycache__/
+*.pyc
+
+# 🛑 Ignore Hardhat cache & artifacts
+cache/
+artifacts/
+
+# 🛑 Ignore environment variables
+.env
+.env.local
+.env.*.local
+
+# 🛑 Ignore IDE-specific files (VSCode, JetBrains)
+.vscode/
+.idea/
+
+# 🛑 Ignore logs & system files
+*.log
+.DS_Store
