@@ -8,28 +8,42 @@
 </head>
 <body>
 
-    <h1>📤 Upload Credit Snapshot</h1>
-    <p>Submit your financial integrity proof to the blockchain.</p>
+    <h1>Upload Credit Snapshot</h1>
+    <p>Mint a provable credit score snapshot as an NFT on the blockchain.</p>
 
     <form id="uploadForm">
-        <label for="phrase1">Passphrase 1:</label>
-        <input type="text" id="phrase1" name="phrase1" required>
+        <label for="wallet_address">Wallet Address:</label>
+        <input type="text" id="wallet_address" name="wallet_address" placeholder="0x..." required>
 
-        <label for="phrase2">Passphrase 2:</label>
-        <input type="text" id="phrase2" name="phrase2" required>
+        <label for="credit_score">Credit Score (300-850):</label>
+        <input type="number" id="credit_score" name="credit_score" min="300" max="850" required>
 
-        <label for="biometric_proof">Biometric Proof:</label>
-        <input type="text" id="biometric_proof" name="biometric_proof" required>
-
-        <label for="credit_score">Credit Score:</label>
-        <input type="number" id="credit_score" name="credit_score" required>
-
-        <button type="submit">Submit</button>
+        <button type="submit">Mint Snapshot</button>
     </form>
 
     <p id="result"></p>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+    document.getElementById("uploadForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const wallet_address = document.getElementById("wallet_address").value;
+        const credit_score = document.getElementById("credit_score").value;
+
+        const response = await fetch("/upload_credit_report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ wallet_address, credit_score: parseInt(credit_score) })
+        });
+
+        const result = await response.json();
+        if (result.error) {
+            document.getElementById("result").innerText = result.error;
+        } else if (result.redirect_url) {
+            window.location.href = result.redirect_url;
+        }
+    });
+    </script>
 
 </body>
 </html>

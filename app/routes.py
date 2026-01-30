@@ -1,117 +1,78 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
-from web3 import Web3
-import json
-import hashlib
-import time
-from app.identity import generate_fingerprint
+from app.models import mint_snapshot, get_snapshot, get_snapshots_by_owner
 
 routes = Blueprint("routes", __name__)
 
-# Connect to Hardhat's Local Testnet (No real ETH transactions)
-w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
 
-# Load Hardhat Deployed Contract
-contract_address = "0x5FbDB2315678afecb367f032d93F642f64180aa3"  # Replace with your deployed contract address
-with open("artifacts/contracts/AegisCredit.sol/AegisCredit.json") as f:
-    contract_abi = json.load(f)["abi"]
-
-contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-
-# 🌐 **Web Routes**
 @routes.route('/')
 def home():
-    """Landing page."""
     return render_template("index.html")
+
 
 @routes.route('/upload')
 def upload_page():
-    """Page for uploading a credit snapshot."""
     return render_template("upload.html")
+
 
 @routes.route('/verify')
 def verify_page():
-    """Page for verifying a stored snapshot."""
     return render_template("verify.html")
+
 
 @routes.route('/submission_success')
 def submission_success():
-    """Display transaction success details."""
     tx_hash = request.args.get("tx_hash")
-    user_id = request.args.get("user_id")
-    return render_template("submission_success.html", tx_hash=tx_hash, user_id=user_id)
+    token_id = request.args.get("token_id")
+    return render_template("submission_success.html", tx_hash=tx_hash, token_id=token_id)
 
-# 🔗 **Blockchain API Routes**
+
 @routes.route('/upload_credit_report', methods=['POST'])
 def upload_credit_report():
-    """Hashes and submits a credit snapshot directly to Hardhat blockchain."""
+    """Mint a credit snapshot NFT."""
     data = request.json
-    phrase1 = data.get("phrase1")
-    phrase2 = data.get("phrase2")
-    biometric_proof = data.get("biometric_proof")
+    wallet_address = data.get("wallet_address")
     credit_score = data.get("credit_score")
 
-    if not phrase1 or not phrase2 or not biometric_proof or not credit_score:
-        return jsonify({"error": "Missing required fields"}), 400
+    if not wallet_address or not credit_score:
+        return jsonify({"error": "Missing wallet_address or credit_score"}), 400
 
-    # 🔑 Generate user fingerprint
-    user_id = generate_fingerprint(phrase1, phrase2, biometric_proof)
-
-    # 🔒 Hash credit score for security
-    hashed_score = hashlib.sha256(str(credit_score).encode()).hexdigest()
-
-    # 🚀 Check if fingerprint already exists in Hardhat
     try:
-        existing_snapshot = contract.functions.getCreditSnapshotByFingerprint(user_id).call()
-        if existing_snapshot[1] != 0:  # If creditScore is nonzero, fingerprint exists
-            return jsonify({
-                "message": "Duplicate submission detected. Redirecting to verify.",
-                "redirect_url": url_for('routes.verify_page', user_id=user_id)
-            })
-    except:
-        pass  # No data found, safe to continue submission
+        credit_score = int(credit_score)
+    except ValueError:
+        return jsonify({"error": "credit_score must be a number"}), 400
 
-    # 🚀 Call Hardhat contract function
-    tx_hash = contract.functions.storeCreditSnapshot(
-        int(credit_score), hashed_score, user_id
-    ).transact({
-        "from": w3.eth.accounts[0]
-    })
+    if credit_score < 300 or credit_score > 850:
+        return jsonify({"error": "Credit score must be between 300 and 850"}), 400
 
-    # ✅ Wait for the transaction to be mined
-    tx_receipt = None
-    while tx_receipt is None:
-        try:
-            tx_receipt = w3.eth.get_transaction_receipt(tx_hash)
-        except:
-            time.sleep(1)  # Wait before retrying
+    result = mint_snapshot(wallet_address, credit_score)
 
     return jsonify({
-        "message": "Credit snapshot stored on Hardhat testnet",
-        "redirect_url": url_for('routes.submission_success', tx_hash=tx_receipt.transactionHash.hex(), user_id=user_id)
+        "message": "Credit snapshot NFT minted",
+        "redirect_url": url_for('routes.submission_success',
+                                tx_hash=result["tx_hash"],
+                                token_id=result["token_id"])
     })
 
-@routes.route('/get_chain', methods=['GET'])
-def get_chain():
-    """Retrieve blockchain data from Hardhat testnet."""
-    total_blocks = contract.functions.getTotalBlocks().call()
-    chain_data = [contract.functions.getBlock(i).call() for i in range(total_blocks)]
-    return jsonify(chain_data)
 
 @routes.route('/get_credit_report', methods=['POST'])
 def get_credit_report():
-    """Retrieves a stored credit snapshot using the fingerprint (user_id)."""
+    """Retrieve snapshots by wallet address or token ID."""
     data = request.json
-    user_id = data.get("user_id")
+    wallet_address = data.get("wallet_address")
+    token_id = data.get("token_id")
 
-    if not user_id:
-        return jsonify({"error": "Missing user_id"}), 400
+    if token_id is not None:
+        try:
+            snapshot = get_snapshot(token_id)
+            return jsonify(snapshot)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 404
 
-    # Query the blockchain
-    snapshot = contract.functions.getCreditSnapshotByFingerprint(user_id).call()
+    if wallet_address:
+        try:
+            snapshots = get_snapshots_by_owner(wallet_address)
+            return jsonify({"snapshots": snapshots, "wallet_address": wallet_address})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 404
 
-    return jsonify({
-        "user_address": snapshot[0],
-        "credit_score": snapshot[1],
-        "timestamp": snapshot[2],
-        "report_hash": snapshot[3]
-    })
+    return jsonify({"error": "Provide wallet_address or token_id"}), 400

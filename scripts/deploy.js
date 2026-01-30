@@ -1,10 +1,10 @@
 async function main() {
-    const AegisCredit = await hre.ethers.getContractFactory("AegisCredit"); // Use 'hre.ethers' properly
-    const aegisCredit = await AegisCredit.deploy();  // Deploy the contract
+    const CreditSnapshotNFT = await hre.ethers.getContractFactory("CreditSnapshotNFT");
+    const creditSnapshot = await CreditSnapshotNFT.deploy();
 
-    await aegisCredit.waitForDeployment();  // Ensure it's deployed before logging
+    await creditSnapshot.waitForDeployment();
 
-    console.log("AegisCredit deployed to:", await aegisCredit.getAddress()); // Get the deployed contract address
+    console.log("CreditSnapshotNFT deployed to:", await creditSnapshot.getAddress());
 }
 
 main()
